@@ -1,6 +1,7 @@
 using System;
 using Systems;
 using UniRx;
+using UniRx.Async;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,11 +10,15 @@ namespace UIs{
         [SerializeField] private Number number;
         
         private Button button;
+        private bool canLoad;
         private void Start(){
+            canLoad = true;
             button = GetComponent<Button>();
             button.OnClickAsObservable()
-                  .Subscribe(_ => {
-                      
+                  .Subscribe(async _ => {
+                      canLoad = false;
+                      await Picture.LoadAssets(number, this.GetCancellationTokenOnDestroy());
+                      canLoad = true;
                   }).AddTo(this);
         }
     }
