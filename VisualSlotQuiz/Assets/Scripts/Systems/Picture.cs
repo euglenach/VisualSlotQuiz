@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using UniRx.Async;
@@ -11,6 +12,24 @@ namespace Systems{
         private static Queue<Texture2D>[] assets =
             {new Queue<Texture2D>(), new Queue<Texture2D>(), new Queue<Texture2D>()};
 
+        public static Texture2D GetNextTex2D(Number number){
+            return assets[(int)number].Dequeue();
+        }
+        public static async UniTask LoadAssets(Number number,CancellationToken token){
+            foreach(var path in await Load(token)){
+                Debug.Log(path);
+                token.ThrowIfCancellationRequested();
+                var tex2D = FilePath2Tex2D(path);
+                token.ThrowIfCancellationRequested();
+                if(tex2D==null){continue;}
+                assets[(int)number].Enqueue(tex2D);
+            }
+        }
+
+        public static bool HasNextTex2D(Number number){
+            return assets[(int)number].Any();
+        }
+        
         private static async UniTask<IEnumerable<string>> Load(CancellationToken token){
             return await UniTask.Run(() => {
                 using(var ofd = new OpenFileDialog()){
@@ -22,17 +41,7 @@ namespace Systems{
                 }
             });
         }
-
-        public static async UniTask LoadAssets(Number number,CancellationToken token){
-            foreach(var path in await Load(token)){
-                Debug.Log(path);
-                token.ThrowIfCancellationRequested();
-                var tex2D = FilePath2Tex2D(path);
-                token.ThrowIfCancellationRequested();
-                if(tex2D==null){continue;}
-                assets[(int)number].Enqueue(tex2D);
-            }
-        }
+        
 
         private static Texture2D FilePath2Tex2D(string path){
             Texture2D texture;
@@ -52,11 +61,14 @@ namespace Systems{
                 for(var i = 0; i < 4; i++){ height = height * 256 + readBinary[pos++]; }
 
                 //byteからTexture2D作成
-                texture = new Texture2D(width, height);
+                Debug.Log("w:" + width);
+                Debug.Log("h:" + height);
+                texture = new Texture2D(1,1);
                 texture.LoadImage(readBinary);
             }
 
             return texture;
         }
+        
     }
 }
