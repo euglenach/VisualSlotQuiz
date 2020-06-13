@@ -7,11 +7,15 @@ using System.Windows.Forms;
 using SFB;
 using UniRx.Async;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Systems{
     public static class Picture{
         private static Queue<Texture2D>[] assets =
             {new Queue<Texture2D>(), new Queue<Texture2D>(), new Queue<Texture2D>()};
+
+        private static Texture2D clearTexture;
+        public static Texture2D ClearTexture => clearTexture;
 
         public static Texture2D GetNextTex2D(Number number){
             return assets[(int)number].Dequeue();
@@ -25,29 +29,46 @@ namespace Systems{
                 if(tex2D==null){continue;}
                 assets[(int)number].Enqueue(tex2D);
             }
+            clearTexture = Resources.Load<Texture2D>("clear");
         }
 
         public static bool HasNextTex2D(Number number){
             return assets[(int)number].Any();
         }
-        
-        private static async UniTask<IEnumerable<string>> Load(CancellationToken token){
 
-            return await UniTask.Run(() => {
-                // using(var ofd = new OpenFileDialog()){
-                //     ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
-                //     ofd.Title = "画像ファイルを指定してください";
-                //     ofd.ShowDialog();
-                //     token.ThrowIfCancellationRequested();
-                //     return ofd.FileNames;
-                // }
-                var extensions = new [] {
-                    new ExtensionFilter("Image Files", "png", "jpg", "jpeg" ),
-                    new ExtensionFilter("All Files", "*" ),
-                };
-            
-                 return StandaloneFileBrowser.OpenFilePanel("画像ファイルを指定してください", "", extensions, true);
-            });
+        public static void UnloadAssets(){
+            Object.DestroyImmediate(clearTexture,true);
+            foreach(var asset in assets){
+                foreach(var tex in asset){
+                    Debug.Log(tex);
+                    Object.DestroyImmediate(tex,true);
+                }
+            }
+            Resources.UnloadUnusedAssets();
+        }
+
+        private static async UniTask<IEnumerable<string>> Load(CancellationToken token){
+            // return await UniTask.Run(() => {
+            //     // using(var ofd = new OpenFileDialog()){
+            //     //     ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
+            //     //     ofd.Title = "画像ファイルを指定してください";
+            //     //     ofd.ShowDialog();
+            //     //     token.ThrowIfCancellationRequested();
+            //     //     return ofd.FileNames;
+            //     // }
+            //     var extensions = new[]{
+            //         new ExtensionFilter("Image Files", "png", "jpg", "jpeg")
+            //     };
+            //     
+            //     var path = StandaloneFileBrowser.OpenFilePanel("画像ファイルを指定してください", "", extensions, true);
+            //     return path;
+            // });
+            var extensions = new[]{
+                new ExtensionFilter("Image Files", "png", "jpg", "jpeg")
+            };
+                
+            var path = StandaloneFileBrowser.OpenFilePanel("画像ファイルを指定してください", "", extensions, true);
+            return path;
         }
         
 
@@ -69,8 +90,6 @@ namespace Systems{
                 for(var i = 0; i < 4; i++){ height = height * 256 + readBinary[pos++]; }
 
                 //byteからTexture2D作成
-                Debug.Log("w:" + width);
-                Debug.Log("h:" + height);
                 texture = new Texture2D(1,1);
                 texture.LoadImage(readBinary);
             }

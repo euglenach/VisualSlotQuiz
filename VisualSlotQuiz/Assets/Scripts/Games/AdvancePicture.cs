@@ -25,9 +25,13 @@ namespace Games{
         }
 
         private void Advance(){
+            if(image.texture != null){
+                Destroy(image.texture);    
+            }
+            
             if(!Picture.HasNextTex2D(number)){
                 isClear = true;
-                image.texture = Resources.Load<Texture2D>("clear");
+                image.texture = Picture.ClearTexture;
                 button.GetComponent<Button>().interactable = false;
                 return;
             }

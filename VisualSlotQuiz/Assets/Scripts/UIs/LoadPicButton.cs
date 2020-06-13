@@ -14,6 +14,7 @@ namespace UIs{
             canLoad = true;
             button = GetComponent<Button>();
             button.OnClickAsObservable()
+                  .Where(_ => canLoad)
                   .Subscribe(async _ => {
                       canLoad = false;
                       await Picture.LoadAssets(number, this.GetCancellationTokenOnDestroy());
