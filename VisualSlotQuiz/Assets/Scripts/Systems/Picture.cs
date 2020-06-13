@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using SFB;
 using UniRx.Async;
 using UnityEngine;
 
@@ -31,14 +32,21 @@ namespace Systems{
         }
         
         private static async UniTask<IEnumerable<string>> Load(CancellationToken token){
+
             return await UniTask.Run(() => {
-                using(var ofd = new OpenFileDialog()){
-                    ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
-                    ofd.Title = "画像ファイルを指定してください";
-                    ofd.ShowDialog();
-                    token.ThrowIfCancellationRequested();
-                    return ofd.FileNames;
-                }
+                // using(var ofd = new OpenFileDialog()){
+                //     ofd.Filter = "Image Files(*.BMP;*.JPG;*.GIF;*.PNG)|*.BMP;*.JPG;*.GIF;*.PNG|All files (*.*)|*.*";
+                //     ofd.Title = "画像ファイルを指定してください";
+                //     ofd.ShowDialog();
+                //     token.ThrowIfCancellationRequested();
+                //     return ofd.FileNames;
+                // }
+                var extensions = new [] {
+                    new ExtensionFilter("Image Files", "png", "jpg", "jpeg" ),
+                    new ExtensionFilter("All Files", "*" ),
+                };
+            
+                 return StandaloneFileBrowser.OpenFilePanel("画像ファイルを指定してください", "", extensions, true);
             });
         }
         
